@@ -17,6 +17,11 @@
             right: 0}
 
             .info { padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } .info h4 { margin: 0 0 5px; color: #777; }
+
+            #controls {
+            padding-left: 10px;
+            padding-top: 10px;}
+
         </style>
 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
@@ -34,109 +39,105 @@
         </style>
 
         <div id="controls">
-            <form name="geographies">
-                <label class="radio-inline">
-                  <input type="radio" name="georadio" value="cd" checked>Community Districts
-                </label>
-                <label class="radio-inline">
-                  <input type="radio" name="georadio" value="uhf42">UHF42
-                </label>
-              </form>
+            <a onclick="clearMap()" href="#">Clear Map</a> | <a onclick="updateGeo(UHF42)" href="#">UHF42</a> |  <a onclick="updateGeo(CD)" href="#">CD</a>
+
+
         </div>
 
             <div id="map"></div>
 
 
         <script>
+            var map = L.map('map').setView([40.715554,-74.0026642],11); // [Lat,Long],Zoom
+            L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
+                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            }).addTo(map);
+            
+        
+
+            L.control.scale({
+                metric: false,
+                position: 'bottomleft'
+            }).addTo(map)
+
+            const legend = L.control({position: 'topright'});
+
+            legend.onAdd = function (map) {
+        
+                const div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML = "<ul><li>Community Districts</li><li>UHF42</li></ul>"
+                return div;
+            };
+        
+            legend.addTo(map);
 
 
+            // When style is run in const geojson, it returns these - default styles
+            function style(feature) {
+                return {
+                    weight: 1,
+                    opacity: 1,
+                    color: 'black',
+                    dashArray: '1',
+                    fillOpacity: 0.3,
+                    fillColor: 'black'
+                };
+            }
 
-          var radios = document.forms["geographies"].elements["georadio"];
-            for(var i = 0, max = radios.length; i < max; i++) {
-                radios[i].onclick = function() {
-                    alert(this.value)
-                }
+            // Highlght feature
+            function highlightFeature(e) {
+                const layer = e.target;
+        
+                layer.setStyle({ // Styles for hover-highlight
+                    weight: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.7
+                });
+        
+                layer.bringToFront();
+        
+            }
+
+            // This actually calls our jeojson, style, and onEachFeature
+            var geog = L.geoJson(CD, {
+                style,
+                onEachFeature
+            }).addTo(map);
+
+            // Two other functions
+            function resetHighlight(e) {
+                geog.resetStyle(e.target);
+            }
+        
+            function zoomToFeature(e) {
+                map.fitBounds(e.target.getBounds());
+            }
+        
+            // And what to do on mouseover, mouseout, and click
+            function onEachFeature(feature, layer) {
+                layer.on({
+                    mouseover: highlightFeature,
+                    mouseout: resetHighlight,
+                    click: zoomToFeature // let's replace this with... something else!
+                });
+            }
+
+            function clearMap() {
+                map.removeLayer(geog) // clears previous geog layer
+            }
+
+            function updateGeo(x) {
+                clearMap();
+                 geog = L.geoJson(x, {
+                    style,
+                    onEachFeature
+                }).addTo(map)
             }
 
 
-            function createMap(geo) {
-                var map = L.map('map').setView([40.715554,-74.0026642],11); // [Lat,Long],Zoom
-                L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
-                    attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-                }).addTo(map);
-                
-            
-    
-                L.control.scale({
-                    metric: false,
-                    position: 'bottomleft'
-                }).addTo(map)
-    
-                const legend = L.control({position: 'topright'});
-    
-                legend.onAdd = function (map) {
-            
-                    const div = L.DomUtil.create('div', 'info legend');
-                    div.innerHTML = "<ul><li>Community Districts</li><li>UHF42</li></ul>"
-                    return div;
-                };
-            
-                legend.addTo(map);
-    
-                // When style is run in const geojson, it returns these - default styles
-                function style(feature) {
-                    return {
-                        weight: 1,
-                        opacity: 1,
-                        color: 'black',
-                        dashArray: '1',
-                        fillOpacity: 0.3,
-                        fillColor: 'black'
-                    };
-                }
-    
-                // Highlght feature
-                function highlightFeature(e) {
-                    const layer = e.target;
-            
-                    layer.setStyle({ // Styles for hover-highlight
-                        weight: 1,
-                        color: 'white',
-                        dashArray: '3',
-                        fillOpacity: 0.7
-                    });
-            
-                    layer.bringToFront();
-            
-                    info.update(layer.feature.properties);
-                }
-    
-                // This actually calls our jeojson, style, and onEachFeature
-                var geog = L.geoJson(geo, {
-                    style,
-                    onEachFeature
-                }).addTo(map);
-    
-                // Two other functions
-                function resetHighlight(e) {
-                    geog.resetStyle(e.target);
-                    info.update();
-                }
-            
-                function zoomToFeature(e) {
-                    map.fitBounds(e.target.getBounds());
-                }
-            
-                // And what to do on mouseover, mouseout, and click
-                function onEachFeature(feature, layer) {
-                    layer.on({
-                        mouseover: highlightFeature,
-                        mouseout: resetHighlight,
-                        click: zoomToFeature // let's replace this with... something else!
-                    });
-                }};
 
-            createMap(cd);
+
 
 
 
