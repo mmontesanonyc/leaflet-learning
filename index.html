@@ -19,10 +19,36 @@
         <div id="map"></div>
 
         <script>
-            var map = L.map('map').setView([40.7157564,-74.004711],11); // [Lat,Long],Zoom
+            var map = L.map('map').setView([40.715554,-74.0026642],15); // [Lat,Long],Zoom
             L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
                 attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
             }).addTo(map);
+            
+            
+
+            var marker = L.marker([40.715554,-74.0026642]).addTo(map) // Adds a marker
+
+            var circle = L.circle([40.715554,-74.0026642],{
+                color: 'black',
+                fillColor: 'black',
+                fillOpacity: 0.5,
+                radius: 200
+            }).addTo(map)
+
+            circle.bindPopup("<b>I'm your radius</b><br>Yup, This is your radius.") // Creates the tooltip. 
+
+            fetch("https://raw.githubusercontent.com/nycehs/NYC_geography/master/CD.geo.json").then(function(response) {
+                return response.json();
+                }).then(function(data) {
+                L.geoJSON(data).addTo(map);
+            }); // This is a way to add an external geojson to the map; other approaches here: https://gis.stackexchange.com/questions/68489/loading-external-geojson-file-into-leaflet-map
+
+
+            L.control.scale({
+                metric: false,
+                position: 'topright'
+            }).addTo(map)
+
         </script>
     </body>
 </html>
