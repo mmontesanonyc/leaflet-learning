@@ -117,15 +117,6 @@
                 geog.resetStyle(e.target);
             }
         
-            function zoomToFeature(e) {
-                map.fitBounds(e.target.getBounds());
-                // console.log(e.target.feature.properties) // GETTING GEOCODE FROM CLICK - USE FOR NRS!!!
-                document.getElementById('selectedCode').innerHTML = e.target.feature.properties.GEOCODE
-                document.getElementById('neighbName').innerHTML = e.target.feature.properties.GEONAME
-
-                
-            }
-        
             // And what to do on mouseover, mouseout, and click
             function onEachFeature(feature, layer) {
                 layer.on({
