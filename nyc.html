@@ -20,7 +20,8 @@
 
             #controls {
             padding-left: 10px;
-            padding-top: 10px;}
+            padding-top: 10px;
+            padding-right: 10px;}
 
         </style>
 
@@ -35,12 +36,14 @@
 
         <style>
             input.radio { display: inline; }
+            button.active {
+            font-weight: bold;
+        }
 
         </style>
 
         <div id="controls">
-            <a onclick="clearMap()" href="#">Clear Map</a> | <a onclick="updateGeo(UHF42)" href="#">UHF42</a> |  <a onclick="updateGeo(CD)" href="#">CD</a>
-
+            <button onclick="clearMap()" style="float:right;">Clear Map</button> <button class="geobtn" id="UHF42" >UHF42</button> <button class="geobtn active" id="CD">CD</button>
 
         </div>
 
@@ -96,6 +99,8 @@
                 });
         
                 layer.bringToFront();
+
+                // console.log(layer.feature.properties.GEOCODE)
         
             }
 
@@ -128,13 +133,48 @@
             }
 
             function updateGeo(x) {
-                clearMap();
-                 geog = L.geoJson(x, {
-                    style,
-                    onEachFeature
+                geog = L.geoJson(x, {
+                   style,
+                   onEachFeature
                 }).addTo(map)
             }
 
+
+            // Event listener on button click to change GEO
+            var controls = document.getElementById('controls')
+            controls.addEventListener('click', (event) => {
+                const isButton = event.target.nodeName === 'BUTTON';
+                if (!isButton) {
+                  return;
+                }
+
+                var btns = document.querySelectorAll('.geobtn')
+                for (i = 0; i < btns.length; i++) {
+                    btns[i].classList.remove('active')
+                };
+
+                event.target.id == "CD" ? document.getElementById('CD').classList.add('active') : document.getElementById('UHF42').classList.add('active')
+
+                // updateGeo(event.target.id)
+                // console.log(window[event.target.id]) // window[event.target.id] converts strings to js variable names
+                clearMap();
+                updateGeo(window[event.target.id])
+
+              })
+
+
+
+
+            // ADD DATA:
+            /*
+            Loop through CD.features[i].properties and add .value - give it random numbers of whatever
+            ... Later, you can join on a dataset based on GEOCODE:
+            Loop through Data and get Geocode;
+                For each datacode, loop through GeoJSON
+                if Geocode = CD.features[i].properties.GEOCODE,
+                then push datavalue to CD.features[i].properties.value
+
+            */
 
 
 

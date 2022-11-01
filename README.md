@@ -14,3 +14,4 @@ Things to make:
 
 Things to try:
 - Loop through a GeoJSON object (NYC neighborhoods) and add data to the GeoJSON - and display that as choro.
+- Add event listener on specific polygons to return specific things. 
