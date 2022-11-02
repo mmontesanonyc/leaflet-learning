@@ -100,6 +100,8 @@
                 e.target.feature.properties.GEOCODE === 0 ? document.getElementById('neighbName').innerHTML = "You've chosen a park. Please choose a neighborhood." : document.getElementById('neighbName').innerHTML = e.target.feature.properties.GEONAME
 
                 // console.log(layer.feature.properties.GEOCODE)
+
+                window.location.hash = e.target.feature.properties.GEOCODE
         
             }
 
@@ -122,6 +124,8 @@
                    //  click: zoomToFeature // let's replace this with... something else!,
                    click: selectNeighborhood
                 });
+                layer._leaflet_id = feature.properties.GEOCODE // gives each item an ID based on GEOCODE
+                ;
             }
 
             function clearMap() {
@@ -163,24 +167,23 @@
             });
             
 
+            // Loos for a hash and changes neighborhood based on it - 
+            var hashID;
+            if (window.location.hash) {
+                console.log('Trying to get to a neighborhood...')
+                hashID = (window.location.hash).substring(1)
+                hashID = Number(hashID)
+                console.log(hashID)
+                polySelect(hashID)
 
-
-
-            // ADD DATA:
-            /*
-            Loop through CD.features[i].properties and add .value - give it random numbers of whatever
-            ... Later, you can join on a dataset based on GEOCODE:
-            Loop through Data and get Geocode;
-                For each datacode, loop through GeoJSON
-                if Geocode = CD.features[i].properties.GEOCODE,
-                then push datavalue to CD.features[i].properties.value
-
-            */
-
-
-
-
-
+            } else {}
+            
+            // with above, enables an artificial 'click' based on other input (hash, or menu)
+            function polySelect(a){
+                map._layers[a].fire('click');  // 'clicks' on layer
+                var layer = map._layers[a];
+                 map.fitBounds(layer.getBounds());  
+            }
 
         </script>
     </body>
