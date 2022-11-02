@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+
+            html, body {
+                height: 100%;
+                margin: 0;
+            }
+
+
+            #map {
+            position:absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0}
+
+            .info { padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } .info h4 { margin: 0 0 5px; color: #777; }
+
+
+
+        </style>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+        <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+        <script src="nyc-geo.js"></script>
+
+    </head>
+
+
+    <body>
+
+
+            <div id="map"></div>
+
+            <div id="legend" style="display:none">
+                <form name="formA">
+                      <label for="CD"><input type="radio" id="CD" name="neighb" value="CD" checked>
+                  Community districts</label><br>
+                  <label for="UHF42"><input type="radio" id="UHF42"  name="neighb" value="UHF42">
+                  UHF42</label>
+                </form>
+                <!--
+                    This lets me stick HTML as HTML, and then grab it from JavaScript to insert elsewhere. It's a little more manageable.
+                -->
+            </div>
+
+
+        <script>
+            var map = L.map('map').setView([40.715554,-74.0026642],11); // [Lat,Long],Zoom
+            L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
+                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            }).addTo(map);
+            
+        
+
+            L.control.scale({
+                metric: false,
+                position: 'bottomleft'
+            }).addTo(map)
+
+            const legend = L.control({position: 'topright'});
+
+            legend.onAdd = function (map) {
+        
+                const div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML = document.getElementById('legend').innerHTML
+                return div;
+            };
+        
+            legend.addTo(map);
+
+
+            // When style is run in const geojson, it returns these - default styles
+            function style(feature) {
+                return {
+                    weight: 1,
+                    opacity: 1,
+                    color: 'black',
+                    dashArray: '1',
+                    fillOpacity: 0.3,
+                    fillColor: 'black'
+                };
+            }
+
+            // Highlght feature
+            function highlightFeature(e) {
+                const layer = e.target;
+        
+                layer.setStyle({ // Styles for hover-highlight
+                    weight: 1,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.7
+                });
+        
+                layer.bringToFront();
+
+                // console.log(layer.feature.properties.GEOCODE)
+        
+            }
+
+            // This actually calls our jeojson, style, and onEachFeature
+            var geog = L.geoJson(CD, {
+                style,
+                onEachFeature
+            }).addTo(map);
+
+            // Two other functions
+            function resetHighlight(e) {
+                geog.resetStyle(e.target);
+            }
+        
+            function zoomToFeature(e) {
+                map.fitBounds(e.target.getBounds());
+                console.log(e.target.feature.properties.GEOCODE) // GETTING GEOCODE FROM CLICK - USE FOR NRS!!!
+            }
+        
+            // And what to do on mouseover, mouseout, and click
+            function onEachFeature(feature, layer) {
+                layer.on({
+                    mouseover: highlightFeature,
+                    mouseout: resetHighlight,
+                    click: zoomToFeature // let's replace this with... something else!
+                });
+            }
+
+            function clearMap() {
+                map.removeLayer(geog) // clears previous geog layer
+            }
+
+            function updateGeo(x) {
+                geog = L.geoJson(x, {
+                   style,
+                   onEachFeature
+                }).addTo(map)
+            }
+
+            // Event listener on radio buttons
+            var radios = document.forms["formA"].elements["neighb"];
+            for(var i = 0, max = radios.length; i < max; i++) {
+                radios[i].onclick = function() {
+                    clearMap()
+                    updateGeo(window[event.target.id])
+                }
+            }
+
+
+            // ADD DATA:
+            /*
+            Loop through CD.features[i].properties and add .value - give it random numbers of whatever
+            ... Later, you can join on a dataset based on GEOCODE:
+            Loop through Data and get Geocode;
+                For each datacode, loop through GeoJSON
+                if Geocode = CD.features[i].properties.GEOCODE,
+                then push datavalue to CD.features[i].properties.value
+
+            */
+
+
+        </script>
+    </body>
+</html>
