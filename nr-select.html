@@ -3,12 +3,6 @@
     <head>
         <style>
 
-            html, body {
-                height: 100%;
-                margin: 0;
-            }
-
-
             #map {
             position:absolute;
             top: 0;
@@ -16,12 +10,7 @@
             left: 0;
             right: 0}
 
-            #controls {
-            height: 10vmin;
-            width: 100%;
-        }
-
-            .info { padding: 6px 8px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } .info h4 { margin: 0 0 5px; color: #777; }
+            .info { padding: 5px 10px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } .info h4 { margin: 0 0 5px; color: #777; }
 
 
 
@@ -35,15 +24,6 @@
 
 
     <body>
-
-        <style>
-            input.radio { display: inline; }
-            button.active {
-            font-weight: bold;
-        }
-
-        </style>
-
 
             <div id="map"></div>
 
@@ -70,7 +50,6 @@
             const legend = L.control({position: 'topright'});
 
             legend.onAdd = function (map) {
-        
                 const div = L.DomUtil.create('div', 'info legend');
                 div.innerHTML = document.getElementById('legend').innerHTML
                 return div;
@@ -150,12 +129,14 @@
             }
 
             function resetMap() {
-                clearMap();
-                addNeighborhoods()
-                map.setView([40.715554,-74.0026642],11);
-                document.getElementById('neighbName').innerHTML = ''
-                document.getElementById('selectedCode').innerHTML = ''
-
+                if (window.location.hash) {
+                    clearMap();
+                    addNeighborhoods()
+                    map.setView([40.715554,-74.0026642],11);
+                    document.getElementById('neighbName').innerHTML = ''
+                    document.getElementById('selectedCode').innerHTML = ''
+                    window.location.hash = ''
+                } else {} // do nothing if it's already reset.
             }
 
             function updateGeo(x) {

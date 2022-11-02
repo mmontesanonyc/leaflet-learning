@@ -16,3 +16,4 @@ Types of maps I can imagine making:
 - Point selector - I think I can do this.
 - Choropleth map - have a model
 - Bubble map - could combine approaches with choro and data?
+- [Custom zoom with home button](https://gis.stackexchange.com/questions/127286/home-button-leaflet-map)
