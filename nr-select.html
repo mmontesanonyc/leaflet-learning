@@ -147,27 +147,6 @@
             }
 
 
-            // Event listener on button click to change GEO
-            var controls = document.getElementById('controls')
-            controls.addEventListener('click', (event) => {
-                const isButton = event.target.nodeName === 'BUTTON';
-                if (!isButton) {
-                  return;
-                }
-
-                var btns = document.querySelectorAll('.geobtn')
-                for (i = 0; i < btns.length; i++) {
-                    btns[i].classList.remove('active')
-                };
-
-                event.target.id == "CD" ? document.getElementById('CD').classList.add('active') : document.getElementById('UHF42').classList.add('active')
-
-                // updateGeo(event.target.id)
-                // console.log(window[event.target.id]) // window[event.target.id] converts strings to js variable names
-                clearMap();
-                updateGeo(window[event.target.id])
-              })
-
             // Getting geoname (or geocode) on click of a polygon
             geog.on('click', function(e) {
                 console.log("You chose: " + e.layer.feature.properties.GEONAME);
@@ -190,6 +169,7 @@
                 map._layers[a].fire('click');  // 'clicks' on layer
                 var layer = map._layers[a];
                  map.fitBounds(layer.getBounds());  
+                 console.log("You chose GEOCODE " + a);
             }
 
         </script>
