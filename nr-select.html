@@ -62,8 +62,6 @@
                 attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
             }).addTo(map);
             
-        
-
             L.control.scale({
                 metric: false,
                 position: 'bottomleft'
@@ -73,11 +71,11 @@
             // When style is run in const geojson, it returns these - default styles
             function style(feature) {
                 return {
-                    weight: 1,
+                    weight: 1.5,
                     opacity: 1,
                     color: 'black',
                     dashArray: '1',
-                    fillOpacity: 0.3,
+                    fillOpacity: 0.15,
                     fillColor: 'black'
                 };
             }
@@ -88,10 +86,10 @@
                 const layer = e.target;
         
                 layer.setStyle({ // Styles for hover-highlight
-                    weight: 1,
+                    weight: 3,
                     color: 'white',
                     dashArray: '3',
-                    fillOpacity: 0.7
+                    fillOpacity: 0.5
                 });
         
                 layer.bringToFront();
@@ -99,15 +97,14 @@
                 map.fitBounds(e.target.getBounds());
                 // console.log(e.target.feature.properties) // GETTING GEOCODE FROM CLICK - USE FOR NRS!!!
                 document.getElementById('selectedCode').innerHTML = e.target.feature.properties.GEOCODE
-                document.getElementById('neighbName').innerHTML = e.target.feature.properties.GEONAME
-
+                e.target.feature.properties.GEOCODE === 0 ? document.getElementById('neighbName').innerHTML = "You've chosen a park. Please choose a neighborhood." : document.getElementById('neighbName').innerHTML = e.target.feature.properties.GEONAME
 
                 // console.log(layer.feature.properties.GEOCODE)
         
             }
 
             // This actually calls our jeojson, style, and onEachFeature
-            var geog = L.geoJson(CD, {
+            var geog = L.geoJson(UHF42, {
                 style,
                 onEachFeature
             }).addTo(map);
