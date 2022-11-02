@@ -20,6 +20,12 @@
         <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
         <script src="nyc-geo.js"></script>
 
+        <!-- for custom zoom/home buttons from here: https://gis.stackexchange.com/questions/127286/home-button-leaflet-map -->
+        <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+
+
     </head>
 
 
@@ -37,8 +43,13 @@
 
 
         <script>
-            var map = L.map('map').setView([40.715554,-74.0026642],11); // [Lat,Long],Zoom
+            var lat = 40.715554;
+            var lng = -74.0026642;
+            var zoom = 11;
+
+            var map = L.map('map', {zoomControl: false,}).setView([lat,lng],zoom); // [Lat,Long],Zoom
             L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
+                maxZoom:15,
                 attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
             }).addTo(map);
             
@@ -56,6 +67,16 @@
             };
         
             legend.addTo(map);
+
+            // make a bar with the buttons
+            var zoomBar = L.easyBar([
+                L.easyButton( '<big>+</big>',  function(control, map){map.setZoom(map.getZoom()+1);}),
+                L.easyButton( 'fa-home fa-lg', function(control, map){map.setView([lat,lng], zoom);}),
+                L.easyButton( '<big>-</big>',  function(control, map){map.setZoom(map.getZoom()-1);}),
+            ]);
+            
+            // add it to the map
+            zoomBar.addTo(map);
 
 
             // When style is run in const geojson, it returns these - default styles
