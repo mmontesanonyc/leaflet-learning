@@ -71,7 +71,6 @@
                 joinData()
             });
 
-
             // This function joins data with a nested loop.
             function joinData() {
                 // Loop through UHF42
@@ -93,6 +92,11 @@
                 // console.log(Math.max.apply(null, justValues)) // get max value
                 valueMax = Math.max.apply(null, justValues)
                 console.log('max value: ' + valueMax)
+
+                // create value for density
+                for (i = 0; i < UHF42data.features.length; i++) {
+                    UHF42data.features[i].properties.density = parseInt(100 * UHF42data.features[i].properties.value / valueMax)
+                }
             }
 
 
@@ -118,6 +122,12 @@
         
             legend.addTo(map);
 
+            var geog;
+            geog = L.geoJson(UHF42data, {
+                style,
+                onEachFeature
+            }).addTo(map);
+
             // make a bar with the buttons
             var zoomBar = L.easyBar([
                 L.easyButton( '<big>+</big>',  function(control, map){map.setZoom(map.getZoom()+1);}),
@@ -131,13 +141,13 @@
 
             // When style is run in const geojson, it returns these - default styles
             function style(feature) {
+                // console.log(feature.properties.value)
                 return {
-                    weight: 1.5,
+                    weight: 1,
                     opacity: 1,
-                    color: 'black',
+                    color: 'blue',
                     dashArray: '1',
-                    fillOpacity: 0.15,
-                    fillColor: 'black'
+                    fillColor: '#0000FF'+feature.properties.density
                 };
             }
 
@@ -156,148 +166,21 @@
                 layer.bringToFront();
 
                 map.fitBounds(e.target.getBounds());
-                // console.log(e.target.feature.properties) // GETTING GEOCODE FROM CLICK - USE FOR NRS!!!
-                // document.getElementById('selectedCode').innerHTML = e.target.feature.properties.GEOCODE
                 e.target.feature.properties.GEOCODE === 0 ? document.getElementById('neighbName').innerHTML = "Non-residential" : document.getElementById('neighbName').innerHTML = e.target.feature.properties.GEONAME
-
-                // console.log(layer.feature.properties.GEOCODE)
-
                 window.location.hash = e.target.feature.properties.GEOCODE
         
             }
 
-            var geog;
-            function addNeighborhoods() {
-                 geog = L.geoJson(UHF42data, {
-                    style,
-                    onEachFeature
-                }).addTo(map);
-            }
-            addNeighborhoods();
-
-            
 
 
-            // Two other functions
-            function resetHighlight(e) {
-                geog.resetStyle(e.target);
-            }
-        
             // And what to do on mouseover, mouseout, and click
             function onEachFeature(feature, layer) {
                 layer.on({
-                    // mouseover: highlightFeature,
-                    // mouseout: resetHighlight,
-                   //  click: zoomToFeature // let's replace this with... something else!,
                    click: selectNeighborhood
                 });
                 layer._leaflet_id = feature.properties.GEOCODE // gives each item an ID based on GEOCODE
                 ;
             }
-
-            function clearMap() {
-                map.removeLayer(geog) // clears previous geog layer
-            }
-
-
-            function updateGeo(x) {
-                geog = L.geoJson(x, {
-                   style,
-                   onEachFeature
-                }).addTo(map)
-            }
-
-
-            // Getting geoname (or geocode) on click of a polygon
-            geog.on('click', function(e) {
-                console.log("You chose: " + e.layer.feature.properties.GEONAME);
-                drawChart(e.layer.feature.properties.GEOCODE)
-            });
-            
-
-            // Loos for a hash and changes neighborhood based on it - 
-            var hashID;
-            if (window.location.hash) {
-                console.log('Trying to get to a neighborhood...')
-                hashID = (window.location.hash).substring(1)
-                hashID = Number(hashID)
-                console.log(hashID)
-                polySelect(hashID)
-
-            } else {}
-            
-            // with above, enables an artificial 'click' based on other input (hash, or menu)
-            function polySelect(a){
-                map._layers[a].fire('click');  // 'clicks' on layer
-                var layer = map._layers[a];
-                 map.fitBounds(layer.getBounds());  
-                 console.log("You chose GEOCODE " + a);
-                 drawChart(a)
-            }
-
-            function drawChart(x) {
-                var highlights = [];
-
-                if (x) {
-                    highlights.push(x.toString())
-                    // console.log(highlights)
-                } else {
-                }
-
-                var spec = {
-                    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
-                    "config": {
-                        "view": {"stroke": "transparent"},
-                          "background": "#ffffff00",
-                          "axisY": {"domain": false, "labels": false, "grid": false, "ticks": false},
-                          "axisX": {"domain": false, "labels": true, "grid": false, "ticks": true},
-                    },
-                    "width": "container",
-                    "height": "container",
-                    "description": "A simple bar chart with embedded data.",
-                    "data": {"url": "asthma-edv-adults.csv"},
-                    "mark": {"type": "bar", "tooltip": true},
-                    "encoding": {
-                      "x": {
-                        "field": "Age-adjusted rate per 10,000",
-                        "title": "Age-adjusted rate per 10,000",
-                        "type": "quantitative"
-                      },
-                              "color": {
-                            "condition": [
-                              {
-                                "value": "#DB00A8",
-                                "test": {
-                                  "field": "GeoID",
-                                  "oneOf": highlights
-                                }
-                              }
-                            ],
-                            "value": "darkgray"
-                          },
-                      "y": {"field": "GeoID", "title": "", "type": "nominal", "sort": {"field": "Age-adjusted rate per 10,000"}}
-                      } 
-                  }
-                
-                vegaEmbed('#vis', spec,{"actions": false})
-            };
-
-            drawChart();
-
-
-
-
-            
-            
-              
-
-            // Now... re-draw the map but with the color determined by .value.
-            // ... Color with a single color and a transparency value that's based on data-value/data-max. 
-
-
-            
-            
-
 
 
         </script>
