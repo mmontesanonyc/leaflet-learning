@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+
+            #map {
+            position:absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0}
+
+            .info { width: 25vmax; height: 95vh; padding: 5px 10px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } 
+            .info h4 { margin: 0 0 5px; color: #777; }
+
+
+
+        </style>
+
+        <!-- basic leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+        <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+        
+        <!-- NYC GeoJSON -->
+        <script src="nyc-geo.js"></script>
+
+        <!-- for custom zoom/home buttons from here: https://gis.stackexchange.com/questions/127286/home-button-leaflet-map -->
+        <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+
+        <!-- vega, d3-->
+        <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+        <!--D3-->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+
+    </head>
+
+
+    <body>
+
+            <div id="map"></div>
+
+            <div id="legend" style="display:none">
+                <span style="font-size:16px; font-weight: bold">Asthma ED visits (adults) in</span><br>
+                <p>
+                <span id="neighbName" style="font-weight:bold;"></span></p>
+                <div id="vis" style="width:100%; height: 90%;"></div>
+            </div>
+
+
+        <script>
+            var lat = 40.6856247;
+            var lng = -73.8877654;
+            var zoom = 11;
+
+            // JOIN DATA
+            var UHF42data = UHF42 // copies geojson
+            var justValues = [];
+            var valueMax;
+
+
+            // Load CSV
+            var csvData;
+            d3.csv("asthma-edv-adults.csv").then(function(data) {
+                csvData = data;  
+                joinData()
+            });
+
+
+            // This function joins data with a nested loop.
+            function joinData() {
+                // Loop through UHF42
+                for (i = 0; i < UHF42data.features.length; i++) {
+                    UHF42data.features[i].properties.value;
+                    for (x = 0; x < csvData.length; x ++) {
+                        if (csvData[x].GeoID === UHF42data.features[i].id) {
+                            UHF42data.features[i].properties.value = Number(csvData[x]['Age-adjusted rate per 10,000'])
+                        } else {}
+                    };
+                };
+
+                // PUSH VALUES TO A NEW ARRAY
+                for (i = 0; i < UHF42data.features.length; i++) {
+                    justValues.push(UHF42data.features[i].properties.value);
+                }
+
+                justValues.pop() // remove last value which is NAN
+                // console.log(Math.max.apply(null, justValues)) // get max value
+                valueMax = Math.max.apply(null, justValues)
+                console.log('max value: ' + valueMax)
+            }
+
+
+            // NOW, start drawing the map
+            var map = L.map('map', {zoomControl: false,}).setView([lat,lng],zoom); // [Lat,Long],Zoom
+            L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
+                maxZoom:15,
+                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            }).addTo(map);
+            
+            L.control.scale({
+                metric: false,
+                position: 'bottomleft'
+            }).addTo(map)
+
+            const legend = L.control({position: 'topright'});
+
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML = document.getElementById('legend').innerHTML
+                return div;
+            };
+        
+            legend.addTo(map);
+
+            // make a bar with the buttons
+            var zoomBar = L.easyBar([
+                L.easyButton( '<big>+</big>',  function(control, map){map.setZoom(map.getZoom()+1);}),
+                L.easyButton( 'fa-home fa-lg', function(control, map){map.setView([lat,lng], zoom);}),
+                L.easyButton( '<big>-</big>',  function(control, map){map.setZoom(map.getZoom()-1);}),
+            ]);
+            
+            // add it to the map
+            zoomBar.addTo(map);
+
+
+            // When style is run in const geojson, it returns these - default styles
+            function style(feature) {
+                return {
+                    weight: 1.5,
+                    opacity: 1,
+                    color: 'black',
+                    dashArray: '1',
+                    fillOpacity: 0.15,
+                    fillColor: 'black'
+                };
+            }
+
+            // Highlght feature
+            function selectNeighborhood(e) {
+                geog.resetStyle()
+                const layer = e.target;
+        
+                layer.setStyle({ // Styles for hover-highlight
+                    weight: 3,
+                    color: 'white',
+                    dashArray: '3',
+                    fillOpacity: 0.5
+                });
+        
+                layer.bringToFront();
+
+                map.fitBounds(e.target.getBounds());
+                // console.log(e.target.feature.properties) // GETTING GEOCODE FROM CLICK - USE FOR NRS!!!
+                // document.getElementById('selectedCode').innerHTML = e.target.feature.properties.GEOCODE
+                e.target.feature.properties.GEOCODE === 0 ? document.getElementById('neighbName').innerHTML = "Non-residential" : document.getElementById('neighbName').innerHTML = e.target.feature.properties.GEONAME
+
+                // console.log(layer.feature.properties.GEOCODE)
+
+                window.location.hash = e.target.feature.properties.GEOCODE
+        
+            }
+
+            var geog;
+            function addNeighborhoods() {
+                 geog = L.geoJson(UHF42data, {
+                    style,
+                    onEachFeature
+                }).addTo(map);
+            }
+            addNeighborhoods();
+
+            
+
+
+            // Two other functions
+            function resetHighlight(e) {
+                geog.resetStyle(e.target);
+            }
+        
+            // And what to do on mouseover, mouseout, and click
+            function onEachFeature(feature, layer) {
+                layer.on({
+                    // mouseover: highlightFeature,
+                    // mouseout: resetHighlight,
+                   //  click: zoomToFeature // let's replace this with... something else!,
+                   click: selectNeighborhood
+                });
+                layer._leaflet_id = feature.properties.GEOCODE // gives each item an ID based on GEOCODE
+                ;
+            }
+
+            function clearMap() {
+                map.removeLayer(geog) // clears previous geog layer
+            }
+
+
+            function updateGeo(x) {
+                geog = L.geoJson(x, {
+                   style,
+                   onEachFeature
+                }).addTo(map)
+            }
+
+
+            // Getting geoname (or geocode) on click of a polygon
+            geog.on('click', function(e) {
+                console.log("You chose: " + e.layer.feature.properties.GEONAME);
+                drawChart(e.layer.feature.properties.GEOCODE)
+            });
+            
+
+            // Loos for a hash and changes neighborhood based on it - 
+            var hashID;
+            if (window.location.hash) {
+                console.log('Trying to get to a neighborhood...')
+                hashID = (window.location.hash).substring(1)
+                hashID = Number(hashID)
+                console.log(hashID)
+                polySelect(hashID)
+
+            } else {}
+            
+            // with above, enables an artificial 'click' based on other input (hash, or menu)
+            function polySelect(a){
+                map._layers[a].fire('click');  // 'clicks' on layer
+                var layer = map._layers[a];
+                 map.fitBounds(layer.getBounds());  
+                 console.log("You chose GEOCODE " + a);
+                 drawChart(a)
+            }
+
+            function drawChart(x) {
+                var highlights = [];
+
+                if (x) {
+                    highlights.push(x.toString())
+                    // console.log(highlights)
+                } else {
+                }
+
+                var spec = {
+                    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+                    "config": {
+                        "view": {"stroke": "transparent"},
+                          "background": "#ffffff00",
+                          "axisY": {"domain": false, "labels": false, "grid": false, "ticks": false},
+                          "axisX": {"domain": false, "labels": true, "grid": false, "ticks": true},
+                    },
+                    "width": "container",
+                    "height": "container",
+                    "description": "A simple bar chart with embedded data.",
+                    "data": {"url": "asthma-edv-adults.csv"},
+                    "mark": {"type": "bar", "tooltip": true},
+                    "encoding": {
+                      "x": {
+                        "field": "Age-adjusted rate per 10,000",
+                        "title": "Age-adjusted rate per 10,000",
+                        "type": "quantitative"
+                      },
+                              "color": {
+                            "condition": [
+                              {
+                                "value": "#DB00A8",
+                                "test": {
+                                  "field": "GeoID",
+                                  "oneOf": highlights
+                                }
+                              }
+                            ],
+                            "value": "darkgray"
+                          },
+                      "y": {"field": "GeoID", "title": "", "type": "nominal", "sort": {"field": "Age-adjusted rate per 10,000"}}
+                      } 
+                  }
+                
+                vegaEmbed('#vis', spec,{"actions": false})
+            };
+
+            drawChart();
+
+
+
+
+            
+            
+              
+
+            // Now... re-draw the map but with the color determined by .value.
+            // ... Color with a single color and a transparency value that's based on data-value/data-max. 
+
+
+            
+            
+
+
+
+        </script>
+    </body>
+</html>
