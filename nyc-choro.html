@@ -100,6 +100,10 @@
             }
 
 
+            /*
+            Do this using this extra package: https://github.com/timwis/leaflet-choropleth
+            */
+
             // NOW, start drawing the map
             var map = L.map('map', {zoomControl: false,}).setView([lat,lng],zoom); // [Lat,Long],Zoom
             L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
