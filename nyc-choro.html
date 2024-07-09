@@ -13,6 +13,10 @@
             .info { width: 25vmax; height: 95vh; padding: 5px 10px; font: 14px/16px Arial, Helvetica, sans-serif; background: white; background: rgba(255,255,255,0.8); box-shadow: 0 0 15px rgba(0,0,0,0.2); border-radius: 5px; } 
             .info h4 { margin: 0 0 5px; color: #777; }
 
+            .legend {
+                width: 35vw;
+            }
+
 
 
         </style>
@@ -105,10 +109,10 @@
             */
 
             // NOW, start drawing the map
-            var map = L.map('map', {zoomControl: false,}).setView([lat,lng],zoom); // [Lat,Long],Zoom
+            var map = L.map('map', {scrollWheelZoom: false, zoomControl: false,}).setView([lat,lng],zoom); // [Lat,Long],Zoom
             L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
                 maxZoom:15,
-                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
             }).addTo(map);
             
             L.control.scale({

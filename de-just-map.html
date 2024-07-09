@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+
+            #allHolder {
+                position:absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0
+            }
+
+            #header {
+                float: top;
+                height: 10vh;
+                width: 100%;
+            }
+
+            #map {
+                float: left;
+                height: 90vh;
+                width: 100%;
+            }
+
+            #rightPanel {
+                float:right;
+                height: 90vh;
+                width: 40%;
+                padding-top: 5px;
+            }
+
+            .info { 
+                width: 25vmax; 
+                display: inline-block;
+                padding: 5px 10px; 
+                font: 14px/16px Arial, Helvetica, sans-serif; 
+                background: white; 
+                background: rgba(255,255,255,0.8); 
+                box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+                border-radius: 5px; 
+            }
+
+            .info h4 { margin: 0 0 5px; color: #777; }
+
+        </style>
+
+        <!-- basic leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+        <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+        
+        <!-- NYC GeoJSON -->
+        <script src="nyc-geo.js"></script>
+
+        <!-- for custom zoom/home buttons from here: https://gis.stackexchange.com/questions/127286/home-button-leaflet-map -->
+        <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+
+        <!-- vega, d3-->
+        <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+        <!--D3-->
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+
+    </head>
+
+
+    <body>
+
+
+
+            <div id="allHolder">
+                <div id="header">
+                    <h1>Environment and Health Data Portal</h1>
+                </div>
+
+                <div id="map"></div>
+
+                <!--
+                <div id="rightPanel">
+                    <button>Bar</button>
+                    <button>Trend</button>
+                    <button>Correlate</button>
+                </div>
+            -->
+
+            </div>
+
+
+            <div id="legend" style="display:none">
+                <button>Choose dataset</button> <button style="float:right">About asthma</button>             
+                <hr>
+                <h2 class="h4">Indicator Name</h2>
+                <p class="fs-sm">Indicator description sentences go here. These are usually two sentences long, just a couple of lines.</p>   
+                <button>Show as:</button> <button>Boundaries:</button> <button>Time period:</button>
+            </div>
+
+
+
+        <script>
+            var lat = 40.7349287;
+            var lng = -73.9569687;
+            var zoom = 11;
+
+            var map = L.map('map', {zoomControl: false,}).setView([lat,lng],zoom); // [Lat,Long],Zoom
+            L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
+                maxZoom:15,
+                minZoom: 11,
+                attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            }).addTo(map);
+            
+
+            // make a bar with the buttons
+            var zoomBar = L.easyBar([
+                L.easyButton( '<big>+</big>',  function(control, map){map.setZoom(map.getZoom()+1);}),
+                L.easyButton( 'fa-home fa-lg', function(control, map){map.setView([lat,lng], zoom);}),
+                L.easyButton( '<big>-</big>',  function(control, map){map.setZoom(map.getZoom()-1);}),
+            ]);
+            
+            // add it to the map
+            zoomBar.setPosition('bottomleft').addTo(map);
+
+            /*
+            var indicatorChooser = L.easyBar([
+                L.easyButton( 'fa-list fa-lg', function(){console.log('choose indicator')}),
+                L.easyButton( 'fa-info-circle fa-lg',  function(){console.log('run about text')}),
+            ])
+            indicatorChooser.setPosition('topright').addTo(map);
+            */
+
+            // Add 'legend' (indicator info) to map
+            const legend = L.control({position: 'topleft'});
+
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML = document.getElementById('legend').innerHTML
+                return div;
+            };
+        
+            legend.addTo(map);
+
+
+            // When style is run in const geojson, it returns these - default styles
+            function style(feature) {
+                return {
+                    weight: 1.5,
+                    opacity: 1,
+                    color: 'black',
+                    dashArray: '1',
+                    fillOpacity: 0.15,
+                    fillColor: 'black'
+                };
+            }
+
+
+
+            var geog;
+            function addNeighborhoods() {
+                 geog = L.geoJson(CD, {
+                    style,
+                    onEachFeature
+                }).addTo(map);
+            }
+            addNeighborhoods();
+
+
+
+            // And what to do on mouseover, mouseout, and click
+            function onEachFeature(feature, layer) {
+                layer.on({
+                    mouseover: highlightFeature,
+                    mouseout: resetHighlight,
+                   //  click: zoomToFeature // let's replace this with... something else!,
+                   // click: selectNeighborhood
+                });
+                layer._leaflet_id = feature.properties.GEOCODE // gives each item an ID based on GEOCODE
+                ;
+            }
+
+            const info = L.control();
+
+
+            // highlight function on mouseover
+            function highlightFeature(e) {
+                const layer = e.target;
+        
+                layer.setStyle({
+                    weight: 5,
+                    opacity: 1,
+                    color: 'black',
+                    dashArray: '1',
+                    fillOpacity: 0.15,
+                    fillColor: 'black'
+                });
+        
+                layer.bringToFront();
+        
+                info.update(layer.feature.properties);
+            }
+
+            // Reset function on mouseout
+            function resetHighlight(e) {
+                geog.resetStyle(e.target);
+            }
+
+
+            // Add right-panel text box THIS IS WHERE WE START TO SET UP THE VIEW OVERLAY
+            L.Control.textbox = L.Control.extend({
+                onAdd: function(map) {
+                    
+                var text = L.DomUtil.create('div');
+                text.id = "info_text";
+                text.innerHTML = "<strong>text here</strong>"
+                return text;
+                },
+        
+                onRemove: function(map) {
+                    // Nothing to do here
+                }
+            });
+            L.control.textbox = function(opts) { return new L.Control.textbox(opts);}
+            L.control.textbox({ position: 'topright' }).addTo(map);
+                    
+
+
+        </script>
+    </body>
+</html>
