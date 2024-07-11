@@ -21,6 +21,7 @@
                 float: left;
                 height: 90vh;
                 width: 100%;
+                z-index: 0;
             }
 
             #rightPanel {
@@ -39,9 +40,22 @@
                 background: rgba(255,255,255,0.8); 
                 box-shadow: 0 0 15px rgba(0,0,0,0.2); 
                 border-radius: 5px; 
+                z-index: 10;
             }
 
             .info h4 { margin: 0 0 5px; color: #777; }
+
+            .rightOverlay {
+                width: 40vw;
+                height: 85vh;
+                padding: 5px 10px;
+                font: 14px/16px Arial, Helvetica, sans-serif; 
+                background: white; 
+                background: rgba(255,255,255,0.8); 
+                box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+                border-radius: 5px; 
+                z-index: 10;
+            }
 
         </style>
 
@@ -101,16 +115,22 @@
 
 
         <script>
-            var lat = 40.7349287;
-            var lng = -73.9569687;
+            var lat = 40.7115809;
+            var lng = -73.7527791;
             var zoom = 11;
 
-            var map = L.map('map', {zoomControl: false,}).setView([lat,lng],zoom); // [Lat,Long],Zoom
+            var map = L.map('map', {
+                zoomControl: false,
+                doubleClickZoom: false,
+                scrollWheelZoom: false
+            }).setView([lat,lng],zoom); // [Lat,Long],Zoom
+
             L.tileLayer('https://api.maptiler.com/maps/basic-v2/{z}/{x}/{y}.png?key=dwIJ8hO2KsTMegUfEpYE',{
                 maxZoom:15,
-                minZoom: 11,
+                minZoom: 10,
                 attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
             }).addTo(map);
+
             
 
             // make a bar with the buttons
@@ -213,6 +233,7 @@
                     
                 var text = L.DomUtil.create('div');
                 text.id = "info_text";
+                text.classList.add('rightOverlay')
                 text.innerHTML = "<strong>text here</strong>"
                 return text;
                 },
