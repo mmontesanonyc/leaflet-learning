@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaflet Choropleth with TopoJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 90vh; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- TopoJSON client -->
+<script src="https://unpkg.com/topojson-client@3"></script>
+
+<script>
+// Initialize the map
+const map = L.map('map').setView([37.8, -96], 4);
+
+// Add a basemap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Dummy TopoJSON (you'd normally fetch this from a file)
+const topojsonData = {
+  "type": "Topology",
+  "objects": {
+    "states": {
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "properties": { "geoID": "01" },
+          "arcs": [[0]]
+        },
+        {
+          "type": "Polygon",
+          "properties": { "geoID": "02" },
+          "arcs": [[1]]
+        }
+      ]
+    }
+  },
+  "arcs": [
+    [[-100, 40], [-90, 40], [-90, 30], [-100, 30], [-100, 40]],
+    [[-90, 40], [-80, 40], [-80, 30], [-90, 30], [-90, 40]]
+  ]
+};
+
+// Dummy data file (you'd normally fetch this from a file)
+const attributeData = [
+  { "geoID": "01", "value": 150 },
+  { "geoID": "02", "value": 20 }
+];
+
+// Convert TopoJSON to GeoJSON
+const geojson = topojson.feature(topojsonData, topojsonData.objects.states);
+
+// Create a lookup
+const dataLookup = {};
+attributeData.forEach(item => {
+  dataLookup[item.geoID] = item.value;
+});
+
+// Attach the data to each feature
+geojson.features.forEach(feature => {
+  const geoID = feature.properties.geoID;
+  if (dataLookup[geoID] !== undefined) {
+    feature.properties.dataValue = dataLookup[geoID];
+  } else {
+    feature.properties.dataValue = null;
+  }
+});
+
+// Define a color function
+function getColor(d) {
+  return d > 100 ? '#800026' :
+         d > 50  ? '#BD0026' :
+         d > 20  ? '#E31A1C' :
+         d > 10  ? '#FC4E2A' :
+         d > 5   ? '#FD8D3C' :
+         d > 0   ? '#FEB24C' :
+                   '#FFEDA0';
+}
+
+// Add the geojson to the map
+L.geoJson(geojson, {
+  style: function(feature) {
+    return {
+      fillColor: getColor(feature.properties.dataValue),
+      weight: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.7
+    };
+  },
+  onEachFeature: function(feature, layer) {
+    const value = feature.properties.dataValue;
+    layer.bindPopup("geoID: " + feature.properties.geoID + "<br>Value: " + value);
+  }
+}).addTo(map);
+
+</script>
+
+</body>
+</html>
