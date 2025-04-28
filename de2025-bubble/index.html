@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaflet Choropleth with TopoJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { 
+        height: 100vh;
+        width: 100%; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- TopoJSON client -->
+<script src="https://unpkg.com/topojson-client@3"></script>
+<!-- d3 -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+
+<!-- local files: must be in this order (for now) -->
+<script src="geography.js"></script>
+<script src="data.js"></script>
+<script src="map.js"></script>
+
+
+</body>
+</html>
