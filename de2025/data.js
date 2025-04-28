@@ -6,7 +6,7 @@ const attributeData = [
     "TimePeriodID": 296,
     "Value": 54.7,
     "CI": "",
-    "Note": "",
+    "Note": "Here's a placeholder note",
     "DisplayValue": "54.7",
     "GeoRank": 6,
     "GeoTypeDesc": "Community District",
